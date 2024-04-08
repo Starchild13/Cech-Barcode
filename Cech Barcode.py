@@ -59,24 +59,62 @@ for simplex in tri.simplices:
                 f.append(d.Simplex(edge, simplex_radius))
                 added_simplices.add(edge)
 
+# Helper functions for formatting tick labels
+def H_formatter(x, pos):
+    return f'H{x:.0f}'
 
+def t_formatter(x, pos):
+    return f'{x:.0f}s'
+    
 # Sort the filtration
 f.sort()
 
-# Compute persistent homology, passing the filtration as an argument
-p = d.homology_persistence(f)
-dgms = d.init_diagrams(p, f)
-
-# Function to plot the persistence barcode
 def plot_barcode(diagrams):
-    plt.figure(figsize=(10, 5))  # Adjust figure size for better visibility
+# Create a single figure and axes for the plot
+    fig, ax = plt.subplots()
+
+    # Calculate the number of diagrams to set y-ticks accordingly
+    num_diagrams = len(diagrams)
+    y_ticks = np.arange(num_diagrams)
+    y_tick_labels = [f'$H_{{{i}}}$' for i in range(num_diagrams)]
+
+    base_colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+    colors = base_colors * (len(diagrams) // len(base_colors) + 1)
+
+    # Iterate through each dimension's diagram
     for i, dgm in enumerate(diagrams):
+        # Plot each bar in the barcode
         for p in dgm:
-            plt.plot([p.birth, p.death], [i, i], 'k')
+            ax.plot([p.birth, p.death], [i, i], colors[i])
+
+    # Setting custom formatter for the y-axis
+    formatter = FuncFormatter(H_formatter)
+    ax.yaxis.set_major_formatter(formatter)
+
+    # Setting custom formatter for the x-axis
+    formatter_t = FuncFormatter(t_formatter)
+    ax.xaxis.set_major_formatter(formatter_t)
+
+    # Set the y-ticks and labels according to homology dimensions
+    ax.set_yticks(y_ticks)
+    ax.set_yticklabels(y_tick_labels)
+
+    # Positions and labels for the x-axis
+    tick_positions = [1, 2, 3, 4] # Assuming these positions are relevant for your data
+    tick_labels = ['$t_1$', '$t_2$', '$t_3$', '$t_4$'] # Labels for the x-axis
+    ax.set_xticks(tick_positions)
+    ax.set_xticklabels(tick_labels)
+
+    # Setting the plot title and labels
     plt.title("Persistence Barcode")
-    plt.xlabel("Time")
+    plt.xlabel("Filtration value")
     plt.ylabel("Homology dimension")
+
+    # Show the complete plot
     plt.show()
+    plt.savefig('persistence_barcode.png')
+
+
 
 # Call the plotting function with the calculated diagrams
 plot_barcode(dgms)
